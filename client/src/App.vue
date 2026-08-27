@@ -3,14 +3,24 @@
     <aside class="sidebar" :class="{ collapsed: sidebarCollapsed }">
       <div class="sidebar-header">
         <div class="logo">
-          <span class="logo-mark">{{ t('nav.companyName').charAt(0) }}</span>
+          <span class="logo-mark">{{ t("nav.companyName").charAt(0) }}</span>
           <div class="logo-text">
-            <h1>{{ t('nav.companyName') }}</h1>
-            <span class="subtitle">{{ t('nav.subtitle') }}</span>
+            <h1>{{ t("nav.companyName") }}</h1>
+            <span class="subtitle">{{ t("nav.subtitle") }}</span>
           </div>
         </div>
-        <button class="collapse-btn" @click="sidebarCollapsed = !sidebarCollapsed" title="Toggle sidebar">
-          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 5a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zm0 5a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zm0 5a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>
+        <button
+          class="collapse-btn"
+          @click="sidebarCollapsed = !sidebarCollapsed"
+          title="Toggle sidebar"
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor">
+            <path
+              fill-rule="evenodd"
+              d="M4 5a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zm0 5a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zm0 5a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z"
+              clip-rule="evenodd"
+            />
+          </svg>
         </button>
       </div>
 
@@ -22,7 +32,15 @@
           :class="{ active: $route.path === item.path }"
           :title="item.label"
         >
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <svg
+            class="nav-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <path :d="item.icon" />
           </svg>
           <span class="nav-label">{{ item.label }}</span>
@@ -62,110 +80,146 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue'
-import { api } from './api'
-import { useAuth } from './composables/useAuth'
-import { useI18n } from './composables/useI18n'
-import FilterBar from './components/FilterBar.vue'
-import ProfileMenu from './components/ProfileMenu.vue'
-import ProfileDetailsModal from './components/ProfileDetailsModal.vue'
-import TasksModal from './components/TasksModal.vue'
-import LanguageSwitcher from './components/LanguageSwitcher.vue'
+import { ref, onMounted, computed } from "vue";
+import { api } from "./api";
+import { useAuth } from "./composables/useAuth";
+import { useI18n } from "./composables/useI18n";
+import FilterBar from "./components/FilterBar.vue";
+import ProfileMenu from "./components/ProfileMenu.vue";
+import ProfileDetailsModal from "./components/ProfileDetailsModal.vue";
+import TasksModal from "./components/TasksModal.vue";
+import LanguageSwitcher from "./components/LanguageSwitcher.vue";
 
 export default {
-  name: 'App',
+  name: "App",
   components: {
     FilterBar,
     ProfileMenu,
     ProfileDetailsModal,
     TasksModal,
-    LanguageSwitcher
+    LanguageSwitcher,
   },
   setup() {
-    const { currentUser } = useAuth()
-    const { t } = useI18n()
-    const showProfileDetails = ref(false)
-    const showTasks = ref(false)
-    const apiTasks = ref([])
-    const sidebarCollapsed = ref(false)
+    const { currentUser } = useAuth();
+    const { t } = useI18n();
+    const showProfileDetails = ref(false);
+    const showTasks = ref(false);
+    const apiTasks = ref([]);
+    const sidebarCollapsed = ref(false);
 
     // Icon paths (24x24 stroke grid) keyed by route so nav stays in sync with the router
     const navItems = computed(() => [
-      { path: '/', label: t('nav.overview'), icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
-      { path: '/inventory', label: t('nav.inventory'), icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
-      { path: '/orders', label: t('nav.orders'), icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
-      { path: '/spending', label: t('nav.finance'), icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 2v8m0 0v2m0-2c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
-      { path: '/demand', label: t('nav.demandForecast'), icon: 'M3 17l6-6 4 4 8-8M21 7v6h-6' },
-      { path: '/restocking', label: t('nav.restocking'), icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4M12 11v6' },
-      { path: '/reports', label: 'Reports', icon: 'M9 19V6l7-3v13M9 19l-6-2V8l6-2m0 13l7-3M4 6l6 2m7 8v-6h4v6h-4z' }
-    ])
+      {
+        path: "/",
+        label: t("nav.overview"),
+        icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
+      },
+      {
+        path: "/inventory",
+        label: t("nav.inventory"),
+        icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
+      },
+      {
+        path: "/orders",
+        label: t("nav.orders"),
+        icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4",
+      },
+      {
+        path: "/spending",
+        label: t("nav.finance"),
+        icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 2v8m0 0v2m0-2c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
+      },
+      {
+        path: "/demand",
+        label: t("nav.demandForecast"),
+        icon: "M3 17l6-6 4 4 8-8M21 7v6h-6",
+      },
+      {
+        path: "/restocking",
+        label: t("nav.restocking"),
+        icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4M12 11v6",
+      },
+      {
+        path: "/reports",
+        label: t("nav.reports"),
+        icon: "M9 19V6l7-3v13M9 19l-6-2V8l6-2m0 13l7-3M4 6l6 2m7 8v-6h4v6h-4z",
+      },
+      {
+        path: "/backlog",
+        label: t("nav.backlog"),
+        icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 3h6a2 2 0 012 2v0M9 3a2 2 0 002 2h2a2 2 0 002-2M9 3a2 2 0 012-2h2a2 2 0 012 2m-6 9h6m-6 4h6",
+      },
+    ]);
 
     // Merge mock tasks from currentUser with API tasks
     const tasks = computed(() => {
-      return [...currentUser.value.tasks, ...apiTasks.value]
-    })
+      return [...currentUser.value.tasks, ...apiTasks.value];
+    });
 
     const loadTasks = async () => {
       try {
-        apiTasks.value = await api.getTasks()
+        apiTasks.value = await api.getTasks();
       } catch (err) {
-        console.error('Failed to load tasks:', err)
+        console.error("Failed to load tasks:", err);
       }
-    }
+    };
 
     const addTask = async (taskData) => {
       try {
-        const newTask = await api.createTask(taskData)
+        const newTask = await api.createTask(taskData);
         // Add new task to the beginning of the array
-        apiTasks.value.unshift(newTask)
+        apiTasks.value.unshift(newTask);
       } catch (err) {
-        console.error('Failed to add task:', err)
+        console.error("Failed to add task:", err);
       }
-    }
+    };
 
     const deleteTask = async (taskId) => {
       try {
         // Check if it's a mock task (from currentUser)
-        const isMockTask = currentUser.value.tasks.some(t => t.id === taskId)
+        const isMockTask = currentUser.value.tasks.some((t) => t.id === taskId);
 
         if (isMockTask) {
           // Remove from mock tasks
-          const index = currentUser.value.tasks.findIndex(t => t.id === taskId)
+          const index = currentUser.value.tasks.findIndex(
+            (t) => t.id === taskId,
+          );
           if (index !== -1) {
-            currentUser.value.tasks.splice(index, 1)
+            currentUser.value.tasks.splice(index, 1);
           }
         } else {
           // Remove from API tasks
-          await api.deleteTask(taskId)
-          apiTasks.value = apiTasks.value.filter(t => t.id !== taskId)
+          await api.deleteTask(taskId);
+          apiTasks.value = apiTasks.value.filter((t) => t.id !== taskId);
         }
       } catch (err) {
-        console.error('Failed to delete task:', err)
+        console.error("Failed to delete task:", err);
       }
-    }
+    };
 
     const toggleTask = async (taskId) => {
       try {
         // Check if it's a mock task (from currentUser)
-        const mockTask = currentUser.value.tasks.find(t => t.id === taskId)
+        const mockTask = currentUser.value.tasks.find((t) => t.id === taskId);
 
         if (mockTask) {
           // Toggle mock task status
-          mockTask.status = mockTask.status === 'pending' ? 'completed' : 'pending'
+          mockTask.status =
+            mockTask.status === "pending" ? "completed" : "pending";
         } else {
           // Toggle API task
-          const updatedTask = await api.toggleTask(taskId)
-          const index = apiTasks.value.findIndex(t => t.id === taskId)
+          const updatedTask = await api.toggleTask(taskId);
+          const index = apiTasks.value.findIndex((t) => t.id === taskId);
           if (index !== -1) {
-            apiTasks.value[index] = updatedTask
+            apiTasks.value[index] = updatedTask;
           }
         }
       } catch (err) {
-        console.error('Failed to toggle task:', err)
+        console.error("Failed to toggle task:", err);
       }
-    }
+    };
 
-    onMounted(loadTasks)
+    onMounted(loadTasks);
 
     return {
       t,
@@ -176,10 +230,10 @@ export default {
       deleteTask,
       toggleTask,
       sidebarCollapsed,
-      navItems
-    }
-  }
-}
+      navItems,
+    };
+  },
+};
 </script>
 
 <style>
@@ -193,8 +247,14 @@ export default {
   --sidebar-w: 260px;
   --sidebar-w-collapsed: 76px;
 
-  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
-  --space-5: 24px; --space-6: 32px; --space-7: 40px; --space-8: 48px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 40px;
+  --space-8: 48px;
 
   --radius-sm: 6px;
   --radius: 10px;
@@ -215,11 +275,20 @@ export default {
 
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.06);
-  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.10);
+  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.1);
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    sans-serif;
   background: var(--bg);
   color: var(--text-secondary);
   -webkit-font-smoothing: antialiased;
@@ -277,7 +346,11 @@ body {
   font-size: 1rem;
 }
 
-.logo-text { min-width: 0; overflow: hidden; white-space: nowrap; }
+.logo-text {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
 
 .logo h1 {
   font-size: 1.0625rem;
@@ -308,8 +381,14 @@ body {
   cursor: pointer;
 }
 
-.collapse-btn:hover { background: var(--border-soft); color: var(--text); }
-.collapse-btn svg { width: 16px; height: 16px; }
+.collapse-btn:hover {
+  background: var(--border-soft);
+  color: var(--text);
+}
+.collapse-btn svg {
+  width: 16px;
+  height: 16px;
+}
 
 .nav-links {
   flex: 1;
@@ -330,11 +409,16 @@ body {
   font-weight: 500;
   font-size: 0.9rem;
   border-radius: var(--radius-sm);
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
   white-space: nowrap;
 }
 
-.nav-links a:hover { color: var(--text); background: var(--border-soft); }
+.nav-links a:hover {
+  color: var(--text);
+  background: var(--border-soft);
+}
 
 .nav-links a.active {
   color: var(--accent);
@@ -342,8 +426,15 @@ body {
   font-weight: 600;
 }
 
-.nav-icon { width: 20px; height: 20px; flex-shrink: 0; }
-.nav-label { overflow: hidden; text-overflow: ellipsis; }
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.nav-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .sidebar-footer {
   display: flex;
@@ -354,31 +445,70 @@ body {
 }
 
 /* Collapsed / icon-rail state */
-.app-shell:has(.sidebar.collapsed) { grid-template-columns: var(--sidebar-w-collapsed) 1fr; }
-.sidebar.collapsed { width: var(--sidebar-w-collapsed); }
+.app-shell:has(.sidebar.collapsed) {
+  grid-template-columns: var(--sidebar-w-collapsed) 1fr;
+}
+.sidebar.collapsed {
+  width: var(--sidebar-w-collapsed);
+}
 .sidebar.collapsed .logo-text,
-.sidebar.collapsed .nav-label { display: none; }
-.sidebar.collapsed .sidebar-header { justify-content: center; padding-left: 0; padding-right: 0; }
-.sidebar.collapsed .collapse-btn { display: none; }
-.sidebar.collapsed .nav-links a { justify-content: center; }
+.sidebar.collapsed .nav-label {
+  display: none;
+}
+.sidebar.collapsed .sidebar-header {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+.sidebar.collapsed .collapse-btn {
+  display: none;
+}
+.sidebar.collapsed .nav-links a {
+  justify-content: center;
+}
 .sidebar.collapsed:hover {
   width: var(--sidebar-w);
   position: fixed;
   box-shadow: var(--shadow-lg);
 }
 .sidebar.collapsed:hover .logo-text,
-.sidebar.collapsed:hover .nav-label { display: block; }
-.sidebar.collapsed:hover .sidebar-header { justify-content: space-between; padding-left: var(--space-4); padding-right: var(--space-4); }
-.sidebar.collapsed:hover .collapse-btn { display: flex; }
-.sidebar.collapsed:hover .nav-links a { justify-content: flex-start; }
+.sidebar.collapsed:hover .nav-label {
+  display: block;
+}
+.sidebar.collapsed:hover .sidebar-header {
+  justify-content: space-between;
+  padding-left: var(--space-4);
+  padding-right: var(--space-4);
+}
+.sidebar.collapsed:hover .collapse-btn {
+  display: flex;
+}
+.sidebar.collapsed:hover .nav-links a {
+  justify-content: flex-start;
+}
 
 @media (max-width: 900px) {
-  .app-shell { grid-template-columns: var(--sidebar-w-collapsed) 1fr; }
-  .sidebar { width: var(--sidebar-w-collapsed); }
-  .sidebar .logo-text, .sidebar .nav-label { display: none; }
-  .sidebar .sidebar-header { justify-content: center; padding-left: 0; padding-right: 0; }
-  .sidebar .collapse-btn { display: none; }
-  .sidebar .nav-links a { justify-content: center; }
+  .app-shell {
+    grid-template-columns: var(--sidebar-w-collapsed) 1fr;
+  }
+  .sidebar {
+    width: var(--sidebar-w-collapsed);
+  }
+  .sidebar .logo-text,
+  .sidebar .nav-label {
+    display: none;
+  }
+  .sidebar .sidebar-header {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .sidebar .collapse-btn {
+    display: none;
+  }
+  .sidebar .nav-links a {
+    justify-content: center;
+  }
 }
 
 /* ---------- Main column ---------- */
