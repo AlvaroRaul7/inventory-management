@@ -53,7 +53,12 @@
                 v-for="item in filteredItems"
                 :key="item.id"
                 class="clickable-row"
+                tabindex="0"
+                role="button"
+                :aria-label="item.name"
                 @click="showItemDetail(item)"
+                @keydown.enter="showItemDetail(item)"
+                @keydown.space.prevent="showItemDetail(item)"
               >
                 <td><strong>{{ item.sku }}</strong></td>
                 <td>{{ translateProductName(item.name) }}</td>
@@ -335,5 +340,10 @@ export default {
 
 .clickable-row:hover {
   background: #eff6ff !important;
+}
+
+.clickable-row:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
 }
 </style>

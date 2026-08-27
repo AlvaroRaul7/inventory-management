@@ -74,6 +74,51 @@
           </table>
         </div>
       </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">{{ t('restocking.submittedOrders.title') }} ({{ submittedOrders.length }})</h3>
+        </div>
+        <div v-if="poLoading" class="loading">{{ t('common.loading') }}</div>
+        <div v-else-if="poError" class="error">{{ poError }}</div>
+        <div v-else-if="submittedOrders.length === 0" class="no-data">
+          {{ t('restocking.submittedOrders.empty') }}
+        </div>
+        <div v-else class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>{{ t('restocking.submittedOrders.orderNumber') }}</th>
+                <th>{{ t('restocking.submittedOrders.item') }}</th>
+                <th>{{ t('restocking.submittedOrders.quantity') }}</th>
+                <th>{{ t('restocking.submittedOrders.supplier') }}</th>
+                <th>{{ t('restocking.submittedOrders.unitCost') }}</th>
+                <th>{{ t('restocking.submittedOrders.subtotal') }}</th>
+                <th>{{ t('restocking.submittedOrders.leadTime') }}</th>
+                <th>{{ t('restocking.submittedOrders.expectedDelivery') }}</th>
+                <th>{{ t('restocking.submittedOrders.status') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="order in submittedOrders" :key="order.id">
+                <td><strong>{{ order.order_number }}</strong></td>
+                <td>{{ translateProductName(order.item_name) }}</td>
+                <td>{{ order.quantity }}</td>
+                <td>{{ order.supplier_name }}</td>
+                <td>{{ currencySymbol }}{{ order.unit_cost.toFixed(2) }}</td>
+                <td>{{ currencySymbol }}{{ (order.quantity * order.unit_cost).toFixed(2) }}</td>
+                <td>{{ order.lead_time_days }}</td>
+                <td>{{ formatDate(order.expected_delivery_date) }}</td>
+                <td>
+                  <span :class="['badge', getOrderStatusClass(order.status)]">
+                    {{ t(`status.${order.status.toLowerCase()}`) }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -95,6 +140,10 @@ export default {
     const loading = ref(true)
     const error = ref(null)
     const orders = ref([])
+
+    const submittedOrders = ref([])
+    const poLoading = ref(true)
+    const poError = ref(null)
 
     // Use shared filters
     const {
@@ -138,22 +187,38 @@ export default {
         'Delivered': 'success',
         'Shipped': 'info',
         'Processing': 'warning',
-        'Backordered': 'danger'
+        'Backordered': 'danger',
+        'Pending': 'warning'
       }
       return statusMap[status] || 'info'
     }
 
     const formatDate = (dateString) => {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return '-'
       const { currentLocale } = useI18n()
       const locale = currentLocale.value === 'ja' ? 'ja-JP' : 'en-US'
-      return new Date(dateString).toLocaleDateString(locale, {
+      return date.toLocaleDateString(locale, {
         year: 'numeric',
         month: 'short',
         day: 'numeric'
       })
     }
 
+    const loadPurchaseOrders = async () => {
+      try {
+        poLoading.value = true
+        poError.value = null
+        submittedOrders.value = await api.getPurchaseOrders()
+      } catch (err) {
+        poError.value = 'Failed to load submitted orders: ' + err.message
+      } finally {
+        poLoading.value = false
+      }
+    }
+
     onMounted(loadOrders)
+    onMounted(loadPurchaseOrders)
 
     return {
       t,
@@ -165,7 +230,10 @@ export default {
       formatDate,
       currencySymbol,
       translateProductName,
-      translateCustomerName
+      translateCustomerName,
+      submittedOrders,
+      poLoading,
+      poError
     }
   }
 }
@@ -275,5 +343,12 @@ export default {
 .item-meta {
   font-size: 0.813rem;
   color: #64748b;
+}
+
+.no-data {
+  text-align: center;
+  padding: 2rem;
+  color: #64748b;
+  font-size: 0.938rem;
 }
 </style>
