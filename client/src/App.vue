@@ -31,6 +31,7 @@
           :to="item.path"
           :class="{ active: $route.path === item.path }"
           :title="item.label"
+          :aria-label="item.label"
         >
           <svg
             class="nav-icon"
@@ -617,28 +618,36 @@ body {
 .sidebar.collapsed .theme-toggle-btn {
   justify-content: center;
 }
-.sidebar.collapsed:hover {
+.sidebar.collapsed:hover,
+.sidebar.collapsed:focus-within {
   width: var(--sidebar-w);
   position: fixed;
   box-shadow: var(--shadow-lg);
 }
 .sidebar.collapsed:hover .logo-text,
 .sidebar.collapsed:hover .nav-label,
-.sidebar.collapsed:hover .theme-toggle-label {
+.sidebar.collapsed:hover .theme-toggle-label,
+.sidebar.collapsed:focus-within .logo-text,
+.sidebar.collapsed:focus-within .nav-label,
+.sidebar.collapsed:focus-within .theme-toggle-label {
   display: block;
 }
-.sidebar.collapsed:hover .sidebar-header {
+.sidebar.collapsed:hover .sidebar-header,
+.sidebar.collapsed:focus-within .sidebar-header {
   justify-content: space-between;
   padding-left: var(--space-4);
   padding-right: var(--space-4);
 }
-.sidebar.collapsed:hover .collapse-btn {
+.sidebar.collapsed:hover .collapse-btn,
+.sidebar.collapsed:focus-within .collapse-btn {
   display: flex;
 }
-.sidebar.collapsed:hover .nav-links a {
+.sidebar.collapsed:hover .nav-links a,
+.sidebar.collapsed:focus-within .nav-links a {
   justify-content: flex-start;
 }
-.sidebar.collapsed:hover .theme-toggle-btn {
+.sidebar.collapsed:hover .theme-toggle-btn,
+.sidebar.collapsed:focus-within .theme-toggle-btn {
   justify-content: flex-start;
 }
 

@@ -2,16 +2,25 @@
   <Teleport to="body">
     <Transition name="modal">
       <div v-if="isOpen && backlogItem" class="modal-overlay" @click="close">
-        <div class="modal-container" @click.stop>
+        <div
+          class="modal-container"
+          ref="modalContainer"
+          role="dialog"
+          aria-modal="true"
+          :aria-labelledby="'po-modal-title'"
+          tabindex="-1"
+          @click.stop
+          @keydown.esc="close"
+        >
           <div class="modal-header">
-            <h3 class="modal-title">
+            <h3 class="modal-title" id="po-modal-title">
               {{
                 mode === "create"
-                  ? "Create Purchase Order"
-                  : "Purchase Order Details"
+                  ? t("purchaseOrderModal.createTitle")
+                  : t("purchaseOrderModal.viewTitle")
               }}
             </h3>
-            <button class="close-button" @click="close">
+            <button class="close-button" @click="close" :aria-label="t('purchaseOrderModal.close')">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path
                   d="M15 5L5 15M5 5L15 15"
@@ -39,7 +48,7 @@
             >
               <div class="form-grid">
                 <div class="form-field">
-                  <label class="form-label" for="supplier">Supplier Name</label>
+                  <label class="form-label" for="supplier">{{ t("purchaseOrderModal.supplierName") }}</label>
                   <input
                     id="supplier"
                     v-model="form.supplier_name"
@@ -50,7 +59,7 @@
                 </div>
 
                 <div class="form-field">
-                  <label class="form-label" for="quantity">Quantity</label>
+                  <label class="form-label" for="quantity">{{ t("purchaseOrderModal.quantity") }}</label>
                   <input
                     id="quantity"
                     v-model.number="form.quantity"
@@ -63,7 +72,7 @@
                 </div>
 
                 <div class="form-field">
-                  <label class="form-label" for="unit-cost">Unit Cost</label>
+                  <label class="form-label" for="unit-cost">{{ t("purchaseOrderModal.unitCost") }}</label>
                   <input
                     id="unit-cost"
                     v-model.number="form.unit_cost"
@@ -77,7 +86,7 @@
 
                 <div class="form-field">
                   <label class="form-label" for="lead-time"
-                    >Lead Time (days)</label
+                    >{{ t("purchaseOrderModal.leadTimeDays") }}</label
                   >
                   <input
                     id="lead-time"
@@ -93,7 +102,7 @@
               </div>
 
               <div class="form-field full">
-                <label class="form-label" for="notes">Notes (optional)</label>
+                <label class="form-label" for="notes">{{ t("purchaseOrderModal.notesOptional") }}</label>
                 <textarea
                   id="notes"
                   v-model="form.notes"
@@ -108,60 +117,60 @@
             <!-- VIEW MODE -->
             <div v-else>
               <div v-if="viewLoading" class="loading-state">
-                Loading purchase order...
+                {{ t("purchaseOrderModal.loadingPurchaseOrder") }}
               </div>
               <div v-else-if="!purchaseOrder" class="loading-state">
-                Purchase order not found.
+                {{ t("purchaseOrderModal.purchaseOrderNotFound") }}
               </div>
               <div v-else class="info-grid">
                 <div class="info-item">
-                  <div class="info-label">Order Number</div>
+                  <div class="info-label">{{ t("purchaseOrderModal.orderNumber") }}</div>
                   <div class="info-value order-id">
                     {{ purchaseOrder.order_number }}
                   </div>
                 </div>
                 <div class="info-item">
-                  <div class="info-label">Supplier</div>
+                  <div class="info-label">{{ t("purchaseOrderModal.supplier") }}</div>
                   <div class="info-value">
                     {{ purchaseOrder.supplier_name }}
                   </div>
                 </div>
                 <div class="info-item">
-                  <div class="info-label">Quantity</div>
+                  <div class="info-label">{{ t("purchaseOrderModal.quantity") }}</div>
                   <div class="info-value">
                     {{ purchaseOrder.quantity }} units
                   </div>
                 </div>
                 <div class="info-item">
-                  <div class="info-label">Unit Cost</div>
+                  <div class="info-label">{{ t("purchaseOrderModal.unitCost") }}</div>
                   <div class="info-value">${{ purchaseOrder.unit_cost }}</div>
                 </div>
                 <div class="info-item">
-                  <div class="info-label">Lead Time</div>
+                  <div class="info-label">{{ t("purchaseOrderModal.leadTime") }}</div>
                   <div class="info-value">
                     {{ purchaseOrder.lead_time_days }} days
                   </div>
                 </div>
                 <div class="info-item">
-                  <div class="info-label">Expected Delivery</div>
+                  <div class="info-label">{{ t("purchaseOrderModal.expectedDelivery") }}</div>
                   <div class="info-value">
                     {{ formatDate(purchaseOrder.expected_delivery_date) }}
                   </div>
                 </div>
                 <div class="info-item">
-                  <div class="info-label">Status</div>
+                  <div class="info-label">{{ t("purchaseOrderModal.status") }}</div>
                   <div class="info-value">
                     <span class="badge">{{ purchaseOrder.status }}</span>
                   </div>
                 </div>
                 <div class="info-item">
-                  <div class="info-label">Created Date</div>
+                  <div class="info-label">{{ t("purchaseOrderModal.createdDate") }}</div>
                   <div class="info-value">
                     {{ formatDate(purchaseOrder.created_date) }}
                   </div>
                 </div>
                 <div class="info-item full" v-if="purchaseOrder.notes">
-                  <div class="info-label">Notes</div>
+                  <div class="info-label">{{ t("purchaseOrderModal.notes") }}</div>
                   <div class="info-value">{{ purchaseOrder.notes }}</div>
                 </div>
               </div>
@@ -176,7 +185,7 @@
                 @click="close"
                 :disabled="submitting"
               >
-                Cancel
+                {{ t("purchaseOrderModal.cancel") }}
               </button>
               <button
                 class="btn-primary"
@@ -184,11 +193,11 @@
                 @click="submitOrder"
                 :disabled="submitting"
               >
-                {{ submitting ? "Creating..." : "Create Purchase Order" }}
+                {{ submitting ? t("purchaseOrderModal.creating") : t("purchaseOrderModal.createTitle") }}
               </button>
             </template>
             <template v-else>
-              <button class="btn-secondary" @click="close">Close</button>
+              <button class="btn-secondary" @click="close">{{ t("purchaseOrderModal.close") }}</button>
             </template>
           </div>
         </div>
@@ -198,8 +207,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch } from "vue";
+import { ref, reactive, watch, nextTick } from "vue";
 import { api } from "../api";
+import { useI18n } from "../composables/useI18n";
+
+const { t } = useI18n();
 
 const props = defineProps({
   isOpen: {
@@ -231,6 +243,7 @@ const submitError = ref(null);
 
 const viewLoading = ref(false);
 const purchaseOrder = ref(null);
+const modalContainer = ref(null);
 
 const resetForm = () => {
   form.supplier_name = "";
@@ -275,6 +288,14 @@ watch(
       } else {
         loadPurchaseOrder();
       }
+      nextTick(() => {
+        if (props.mode === "create") {
+          const firstField = document.getElementById("supplier");
+          if (firstField) firstField.focus();
+        } else if (modalContainer.value) {
+          modalContainer.value.focus();
+        }
+      });
     }
   },
 );
@@ -287,7 +308,7 @@ const submitOrder = async () => {
   submitError.value = null;
 
   if (!form.supplier_name || form.quantity <= 0 || form.unit_cost <= 0) {
-    submitError.value = "Please fill in all required fields with valid values.";
+    submitError.value = t("purchaseOrderModal.validationError");
     return;
   }
 
@@ -320,7 +341,7 @@ const submitOrder = async () => {
       ? Array.isArray(err.response.data.detail)
         ? err.response.data.detail.map((d) => d.msg).join(", ")
         : err.response.data.detail
-      : "Failed to create purchase order. Please check your inputs.";
+      : t("purchaseOrderModal.submitError");
   } finally {
     submitting.value = false;
   }

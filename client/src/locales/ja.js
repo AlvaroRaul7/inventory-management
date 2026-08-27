@@ -353,6 +353,31 @@ export default {
     selectLanguage: '言語を選択'
   },
 
+  // Purchase Order Modal
+  purchaseOrderModal: {
+    createTitle: '発注書を作成',
+    viewTitle: '発注書の詳細',
+    supplierName: 'サプライヤー名',
+    quantity: '数量',
+    unitCost: '単価',
+    leadTimeDays: 'リードタイム（日）',
+    notesOptional: '備考（任意）',
+    loadingPurchaseOrder: '発注書を読み込み中...',
+    purchaseOrderNotFound: '発注書が見つかりません。',
+    orderNumber: '注文番号',
+    supplier: 'サプライヤー',
+    leadTime: 'リードタイム',
+    expectedDelivery: '予定配達日',
+    status: 'ステータス',
+    createdDate: '作成日',
+    notes: '備考',
+    cancel: 'キャンセル',
+    creating: '作成中...',
+    close: '閉じる',
+    validationError: 'すべての必須項目に有効な値を入力してください。',
+    submitError: '発注書の作成に失敗しました。入力内容をご確認ください。'
+  },
+
   // Common
   common: {
     loading: '読み込み中...',

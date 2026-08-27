@@ -353,6 +353,31 @@ export default {
     selectLanguage: 'Select Language'
   },
 
+  // Purchase Order Modal
+  purchaseOrderModal: {
+    createTitle: 'Create Purchase Order',
+    viewTitle: 'Purchase Order Details',
+    supplierName: 'Supplier Name',
+    quantity: 'Quantity',
+    unitCost: 'Unit Cost',
+    leadTimeDays: 'Lead Time (days)',
+    notesOptional: 'Notes (optional)',
+    loadingPurchaseOrder: 'Loading purchase order...',
+    purchaseOrderNotFound: 'Purchase order not found.',
+    orderNumber: 'Order Number',
+    supplier: 'Supplier',
+    leadTime: 'Lead Time',
+    expectedDelivery: 'Expected Delivery',
+    status: 'Status',
+    createdDate: 'Created Date',
+    notes: 'Notes',
+    cancel: 'Cancel',
+    creating: 'Creating...',
+    close: 'Close',
+    validationError: 'Please fill in all required fields with valid values.',
+    submitError: 'Failed to create purchase order. Please check your inputs.'
+  },
+
   // Common
   common: {
     loading: 'Loading...',
