@@ -1,7 +1,8 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from datetime import datetime, timedelta
 from mock_data import inventory_items, orders, demand_forecasts, backlog_items, spending_summary, monthly_spending, category_spending, recent_transactions, purchase_orders
 
 app = FastAPI(title="Factory Inventory Management System")
@@ -67,6 +68,7 @@ class InventoryItem(BaseModel):
     unit_cost: float
     location: str
     last_updated: str
+    lead_time_days: int
 
 class Order(BaseModel):
     id: str
@@ -89,6 +91,8 @@ class DemandForecast(BaseModel):
     forecasted_demand: int
     trend: str
     period: str
+    unit_cost: float
+    lead_time_days: int
 
 class BacklogItem(BaseModel):
     id: str
@@ -103,10 +107,14 @@ class BacklogItem(BaseModel):
 
 class PurchaseOrder(BaseModel):
     id: str
-    backlog_item_id: str
+    order_number: str
+    item_sku: str
+    item_name: str
+    backlog_item_id: Optional[str] = None
     supplier_name: str
     quantity: int
     unit_cost: float
+    lead_time_days: int
     expected_delivery_date: str
     status: str
     created_date: str
@@ -119,6 +127,36 @@ class CreatePurchaseOrderRequest(BaseModel):
     unit_cost: float
     expected_delivery_date: str
     notes: Optional[str] = None
+
+class RestockOrderItem(BaseModel):
+    item_sku: str
+    item_name: str
+    quantity: int = Field(gt=0)
+    unit_cost: float = Field(gt=0)
+    lead_time_days: int = Field(ge=0, le=365)
+    supplier_name: str = "Default Supplier"
+
+class CreateRestockOrderRequest(BaseModel):
+    items: List[RestockOrderItem]
+    notes: Optional[str] = None
+
+class Task(BaseModel):
+    id: str
+    title: str
+    priority: str
+    dueDate: str
+    status: str
+
+class CreateTaskRequest(BaseModel):
+    title: str
+    priority: str
+    dueDate: str
+    status: str = "pending"
+
+# In-memory task store. IDs start at 1000 to avoid colliding with the
+# frontend's mock currentUser tasks (ids 1-4, defined in useAuth.js).
+tasks_db = []
+next_task_id = 1000
 
 # API endpoints
 @app.get("/")
@@ -166,6 +204,100 @@ def get_demand_forecasts():
     """Get demand forecasts"""
     return demand_forecasts
 
+@app.get("/api/demand/recommendations")
+def get_demand_recommendations(budget: float = Query(0, ge=0)):
+    """Recommend restocking quantities from demand forecasts, greedily fit to budget.
+    Already-ordered (pending) quantities are subtracted from shortfall so re-submitting
+    an order after placing one doesn't recommend the same units again."""
+    already_ordered = {}
+    for po in purchase_orders:
+        sku = po.get("item_sku")
+        if sku:
+            already_ordered[sku] = already_ordered.get(sku, 0) + po.get("quantity", 0)
+
+    candidates = []
+    for forecast in demand_forecasts:
+        shortfall = forecast["forecasted_demand"] - forecast["current_demand"]
+        shortfall -= already_ordered.get(forecast["item_sku"], 0)
+        if shortfall <= 0:
+            continue
+        urgency = shortfall * (1.5 if forecast["trend"] == "increasing" else 1.0)
+        candidates.append({**forecast, "shortfall": shortfall, "urgency": urgency})
+
+    # Rank by urgency, most urgent first
+    candidates.sort(key=lambda c: c["urgency"], reverse=True)
+
+    remaining_budget_cents = round(budget * 100)
+    recommendations = []
+    for c in candidates:
+        if remaining_budget_cents <= 0:
+            break
+        unit_cost_cents = round(c["unit_cost"] * 100)
+        affordable_qty = remaining_budget_cents // unit_cost_cents
+        recommended_qty = min(c["shortfall"], affordable_qty)
+        if recommended_qty <= 0:
+            continue
+        subtotal_cents = recommended_qty * unit_cost_cents
+        subtotal = round(subtotal_cents / 100, 2)
+        remaining_budget_cents -= subtotal_cents
+        recommendations.append({
+            "item_sku": c["item_sku"],
+            "item_name": c["item_name"],
+            "current_demand": c["current_demand"],
+            "forecasted_demand": c["forecasted_demand"],
+            "shortfall": c["shortfall"],
+            "trend": c["trend"],
+            "recommended_quantity": recommended_qty,
+            "unit_cost": c["unit_cost"],
+            "subtotal": subtotal,
+            "lead_time_days": c["lead_time_days"]
+        })
+
+    total_cost = round(sum(r["subtotal"] for r in recommendations), 2)
+    return {
+        "budget": budget,
+        "total_cost": total_cost,
+        "remaining_budget": round(budget - total_cost, 2),
+        "recommendations": recommendations
+    }
+
+@app.get("/api/purchase-orders", response_model=List[PurchaseOrder])
+def get_purchase_orders():
+    """Get all purchase/restock orders"""
+    return purchase_orders
+
+@app.post("/api/purchase-orders", response_model=List[PurchaseOrder], status_code=201)
+def create_purchase_orders(request: CreateRestockOrderRequest):
+    """Create one or more purchase orders from a restocking order submission"""
+    if not request.items:
+        raise HTTPException(status_code=400, detail="At least one item is required")
+
+    created = []
+    now = datetime.now()
+    for item in request.items:
+        next_id = str(len(purchase_orders) + 1)
+        order_number = f"PO-{now.year}-{str(len(purchase_orders) + 1).zfill(4)}"
+        expected_delivery = now + timedelta(days=item.lead_time_days)
+        new_order = {
+            "id": next_id,
+            "order_number": order_number,
+            "item_sku": item.item_sku,
+            "item_name": item.item_name,
+            "backlog_item_id": None,
+            "supplier_name": item.supplier_name,
+            "quantity": item.quantity,
+            "unit_cost": item.unit_cost,
+            "lead_time_days": item.lead_time_days,
+            "expected_delivery_date": expected_delivery.isoformat(),
+            "status": "Pending",
+            "created_date": now.isoformat(),
+            "notes": request.notes
+        }
+        purchase_orders.append(new_order)
+        created.append(new_order)
+
+    return created
+
 @app.get("/api/backlog", response_model=List[BacklogItem])
 def get_backlog():
     """Get backlog items with purchase order status"""
@@ -174,7 +306,7 @@ def get_backlog():
     for item in backlog_items:
         item_dict = dict(item)
         # Check if this backlog item has a purchase order
-        has_po = any(po["backlog_item_id"] == item["id"] for po in purchase_orders)
+        has_po = any(po.get("backlog_item_id") == item["id"] for po in purchase_orders)
         item_dict["has_purchase_order"] = has_po
         result.append(item_dict)
     return result
@@ -303,6 +435,43 @@ def get_monthly_trends():
     result = list(months.values())
     result.sort(key=lambda x: x['month'])
     return result
+
+@app.get("/api/tasks", response_model=List[Task])
+def get_tasks():
+    """Get all tasks"""
+    return tasks_db
+
+@app.post("/api/tasks", response_model=Task, status_code=201)
+def create_task(request: CreateTaskRequest):
+    """Create a new task"""
+    global next_task_id
+    new_task = {
+        "id": str(next_task_id),
+        "title": request.title,
+        "priority": request.priority,
+        "dueDate": request.dueDate,
+        "status": request.status
+    }
+    next_task_id += 1
+    tasks_db.insert(0, new_task)
+    return new_task
+
+@app.delete("/api/tasks/{task_id}", status_code=204)
+def delete_task(task_id: str):
+    """Delete a task"""
+    task = next((t for t in tasks_db if t["id"] == task_id), None)
+    if not task:
+        raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+    tasks_db.remove(task)
+
+@app.patch("/api/tasks/{task_id}", response_model=Task)
+def toggle_task(task_id: str):
+    """Toggle a task's status between pending and completed"""
+    task = next((t for t in tasks_db if t["id"] == task_id), None)
+    if not task:
+        raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+    task["status"] = "completed" if task["status"] == "pending" else "pending"
+    return task
 
 if __name__ == "__main__":
     import uvicorn
