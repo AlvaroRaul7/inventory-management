@@ -175,8 +175,13 @@ export default {
       },
       {
         path: "/reports",
-        label: "Reports",
+        label: t("nav.reports"),
         icon: "M9 19V6l7-3v13M9 19l-6-2V8l6-2m0 13l7-3M4 6l6 2m7 8v-6h4v6h-4z",
+      },
+      {
+        path: "/backlog",
+        label: t("nav.backlog"),
+        icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 3h6a2 2 0 012 2v0M9 3a2 2 0 002 2h2a2 2 0 002-2M9 3a2 2 0 012-2h2a2 2 0 012 2m-6 9h6m-6 4h6",
       },
     ]);
 
