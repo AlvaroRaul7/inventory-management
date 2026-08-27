@@ -20,7 +20,11 @@
                   : t("purchaseOrderModal.viewTitle")
               }}
             </h3>
-            <button class="close-button" @click="close" :aria-label="t('purchaseOrderModal.close')">
+            <button
+              class="close-button"
+              @click="close"
+              :aria-label="t('purchaseOrderModal.close')"
+            >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path
                   d="M15 5L5 15M5 5L15 15"
@@ -48,7 +52,9 @@
             >
               <div class="form-grid">
                 <div class="form-field">
-                  <label class="form-label" for="supplier">{{ t("purchaseOrderModal.supplierName") }}</label>
+                  <label class="form-label" for="supplier">{{
+                    t("purchaseOrderModal.supplierName")
+                  }}</label>
                   <input
                     id="supplier"
                     v-model="form.supplier_name"
@@ -59,7 +65,9 @@
                 </div>
 
                 <div class="form-field">
-                  <label class="form-label" for="quantity">{{ t("purchaseOrderModal.quantity") }}</label>
+                  <label class="form-label" for="quantity">{{
+                    t("purchaseOrderModal.quantity")
+                  }}</label>
                   <input
                     id="quantity"
                     v-model.number="form.quantity"
@@ -72,7 +80,9 @@
                 </div>
 
                 <div class="form-field">
-                  <label class="form-label" for="unit-cost">{{ t("purchaseOrderModal.unitCost") }}</label>
+                  <label class="form-label" for="unit-cost">{{
+                    t("purchaseOrderModal.unitCost")
+                  }}</label>
                   <input
                     id="unit-cost"
                     v-model.number="form.unit_cost"
@@ -85,9 +95,9 @@
                 </div>
 
                 <div class="form-field">
-                  <label class="form-label" for="lead-time"
-                    >{{ t("purchaseOrderModal.leadTimeDays") }}</label
-                  >
+                  <label class="form-label" for="lead-time">{{
+                    t("purchaseOrderModal.leadTimeDays")
+                  }}</label>
                   <input
                     id="lead-time"
                     v-model.number="form.lead_time_days"
@@ -102,7 +112,9 @@
               </div>
 
               <div class="form-field full">
-                <label class="form-label" for="notes">{{ t("purchaseOrderModal.notesOptional") }}</label>
+                <label class="form-label" for="notes">{{
+                  t("purchaseOrderModal.notesOptional")
+                }}</label>
                 <textarea
                   id="notes"
                   v-model="form.notes"
@@ -124,53 +136,71 @@
               </div>
               <div v-else class="info-grid">
                 <div class="info-item">
-                  <div class="info-label">{{ t("purchaseOrderModal.orderNumber") }}</div>
+                  <div class="info-label">
+                    {{ t("purchaseOrderModal.orderNumber") }}
+                  </div>
                   <div class="info-value order-id">
                     {{ purchaseOrder.order_number }}
                   </div>
                 </div>
                 <div class="info-item">
-                  <div class="info-label">{{ t("purchaseOrderModal.supplier") }}</div>
+                  <div class="info-label">
+                    {{ t("purchaseOrderModal.supplier") }}
+                  </div>
                   <div class="info-value">
                     {{ purchaseOrder.supplier_name }}
                   </div>
                 </div>
                 <div class="info-item">
-                  <div class="info-label">{{ t("purchaseOrderModal.quantity") }}</div>
+                  <div class="info-label">
+                    {{ t("purchaseOrderModal.quantity") }}
+                  </div>
                   <div class="info-value">
                     {{ purchaseOrder.quantity }} units
                   </div>
                 </div>
                 <div class="info-item">
-                  <div class="info-label">{{ t("purchaseOrderModal.unitCost") }}</div>
+                  <div class="info-label">
+                    {{ t("purchaseOrderModal.unitCost") }}
+                  </div>
                   <div class="info-value">${{ purchaseOrder.unit_cost }}</div>
                 </div>
                 <div class="info-item">
-                  <div class="info-label">{{ t("purchaseOrderModal.leadTime") }}</div>
+                  <div class="info-label">
+                    {{ t("purchaseOrderModal.leadTime") }}
+                  </div>
                   <div class="info-value">
                     {{ purchaseOrder.lead_time_days }} days
                   </div>
                 </div>
                 <div class="info-item">
-                  <div class="info-label">{{ t("purchaseOrderModal.expectedDelivery") }}</div>
+                  <div class="info-label">
+                    {{ t("purchaseOrderModal.expectedDelivery") }}
+                  </div>
                   <div class="info-value">
                     {{ formatDate(purchaseOrder.expected_delivery_date) }}
                   </div>
                 </div>
                 <div class="info-item">
-                  <div class="info-label">{{ t("purchaseOrderModal.status") }}</div>
+                  <div class="info-label">
+                    {{ t("purchaseOrderModal.status") }}
+                  </div>
                   <div class="info-value">
                     <span class="badge">{{ purchaseOrder.status }}</span>
                   </div>
                 </div>
                 <div class="info-item">
-                  <div class="info-label">{{ t("purchaseOrderModal.createdDate") }}</div>
+                  <div class="info-label">
+                    {{ t("purchaseOrderModal.createdDate") }}
+                  </div>
                   <div class="info-value">
                     {{ formatDate(purchaseOrder.created_date) }}
                   </div>
                 </div>
                 <div class="info-item full" v-if="purchaseOrder.notes">
-                  <div class="info-label">{{ t("purchaseOrderModal.notes") }}</div>
+                  <div class="info-label">
+                    {{ t("purchaseOrderModal.notes") }}
+                  </div>
                   <div class="info-value">{{ purchaseOrder.notes }}</div>
                 </div>
               </div>
@@ -193,11 +223,17 @@
                 @click="submitOrder"
                 :disabled="submitting"
               >
-                {{ submitting ? t("purchaseOrderModal.creating") : t("purchaseOrderModal.createTitle") }}
+                {{
+                  submitting
+                    ? t("purchaseOrderModal.creating")
+                    : t("purchaseOrderModal.createTitle")
+                }}
               </button>
             </template>
             <template v-else>
-              <button class="btn-secondary" @click="close">{{ t("purchaseOrderModal.close") }}</button>
+              <button class="btn-secondary" @click="close">
+                {{ t("purchaseOrderModal.close") }}
+              </button>
             </template>
           </div>
         </div>
@@ -323,18 +359,13 @@ const submitOrder = async () => {
           unit_cost: form.unit_cost,
           lead_time_days: form.lead_time_days,
           supplier_name: form.supplier_name,
+          backlog_item_id: props.backlogItem.id,
         },
       ],
       notes: form.notes,
     });
 
-    const createdOrder = orders[0];
-    const orderWithBacklogLink = {
-      ...createdOrder,
-      backlog_item_id: props.backlogItem.id,
-    };
-
-    emit("po-created", orderWithBacklogLink);
+    emit("po-created", orders[0]);
   } catch (err) {
     console.error(err);
     submitError.value = err.response?.data?.detail

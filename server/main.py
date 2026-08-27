@@ -135,10 +135,29 @@ class RestockOrderItem(BaseModel):
     unit_cost: float = Field(gt=0)
     lead_time_days: int = Field(ge=0, le=365)
     supplier_name: str = "Default Supplier"
+    backlog_item_id: Optional[str] = None
 
 class CreateRestockOrderRequest(BaseModel):
     items: List[RestockOrderItem]
     notes: Optional[str] = None
+
+class Recommendation(BaseModel):
+    item_sku: str
+    item_name: str
+    current_demand: int
+    forecasted_demand: int
+    shortfall: int
+    trend: str
+    recommended_quantity: int
+    unit_cost: float
+    subtotal: float
+    lead_time_days: int
+
+class RecommendationsResponse(BaseModel):
+    budget: float
+    total_cost: float
+    remaining_budget: float
+    recommendations: List[Recommendation]
 
 class Task(BaseModel):
     id: str
@@ -204,7 +223,7 @@ def get_demand_forecasts():
     """Get demand forecasts"""
     return demand_forecasts
 
-@app.get("/api/demand/recommendations")
+@app.get("/api/demand/recommendations", response_model=RecommendationsResponse)
 def get_demand_recommendations(budget: float = Query(0, ge=0)):
     """Recommend restocking quantities from demand forecasts, greedily fit to budget.
     Already-ordered (pending) quantities are subtracted from shortfall so re-submitting
@@ -283,7 +302,7 @@ def create_purchase_orders(request: CreateRestockOrderRequest):
             "order_number": order_number,
             "item_sku": item.item_sku,
             "item_name": item.item_name,
-            "backlog_item_id": None,
+            "backlog_item_id": item.backlog_item_id,
             "supplier_name": item.supplier_name,
             "quantity": item.quantity,
             "unit_cost": item.unit_cost,
